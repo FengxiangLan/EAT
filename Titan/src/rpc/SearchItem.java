@@ -1,7 +1,7 @@
 package rpc;
 
 import java.io.IOException;
-import java.io.PrintWriter;
+//import java.io.PrintWriter;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -10,10 +10,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
+
+import db.MySQLConnection;
 
 import entity.Item;
 import external.YelpAPI;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Servlet implementation class SearchItem
@@ -38,16 +42,29 @@ public class SearchItem extends HttpServlet {
 		// response.getWriter().append("Served at: ").append(request.getContextPath());
 		double lat = Double.parseDouble(request.getParameter("lat"));
 		double lon = Double.parseDouble(request.getParameter("lon"));
-		
-		YelpAPI yelpAPI = new YelpAPI();
-		List<Item> items = yelpAPI.search(lat, lon, null);
+		String userId = request.getParameter("user_id");
 		
 		// DB operation;
-		JSONArray array = new JSONArray();
-		for (Item item : items) {
-			array.put(item.toJSONObject());
+		String term = request.getParameter("term");
+		MySQLConnection connection = new MySQLConnection();
+		
+		try {
+			List<Item> items = connection.searchItems(lat, lon, term);
+			Set<String> favoriteItemIds = connection.getFavoriteItemIds(userId);
+			
+			JSONArray array = new JSONArray();
+			for (Item item : items) {
+				JSONObject obj = item.toJSONObject();
+				obj.put("favorite", favoriteItemIds.contains(item.getItemId()));
+				array.put(obj);
+			}
+			RpcHelper.writeJsonArray(response, array);
+		}catch(Exception e) {
+			e.printStackTrace();
+		}finally {
+			connection.close();
 		}
-		RpcHelper.writeJsonArray(response, array);
+		
 	}
 
 	/**
