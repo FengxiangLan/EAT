@@ -95,6 +95,7 @@ public class MySQLConnection {
 			e.printStackTrace();
 		}
 		
+		//System.out.println(favoriteItemIds);
 		return favoriteItemIds;
 	}
 	
@@ -196,5 +197,59 @@ public class MySQLConnection {
 		}catch(Exception e) {
 			e.printStackTrace(); 
 		}
+	}
+
+
+	public String getFullname(String userId) {
+		// TODO Auto-generated method stub
+		if (conn == null) {
+			System.err.println("DB connection failed");
+			return "";
+		}
+		
+		String fullName = "";
+		try {
+			String sql = "SELECT first_name, last_name FROM users WHERE user_id = ?";
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setString(1, userId);
+
+			ResultSet rs = ps.executeQuery();
+			rs.next();
+			String firstName = rs.getString("first_name");
+			String lastName = rs.getString("last_name");
+			fullName = firstName + " " + lastName;			
+		}catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
+		return fullName;
+	}
+
+
+	public boolean verifyLogin(String userId, String pwd) {
+		// TODO Auto-generated method stub
+		if (conn == null) {
+			System.err.println("DB connection failed");
+			return false;
+		}
+		
+		boolean ver = false;
+		try {
+			String sql = "SELECT password FROM users WHERE user_id = ?";
+			PreparedStatement ps = conn.prepareStatement(sql);
+			
+			ps.setString(1, userId);
+			
+			ResultSet rs = ps.executeQuery();
+			rs.next();
+			String p = rs.getString("password");
+			if (pwd.equals(p)) {
+				ver = true;
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+			e.printStackTrace();
+		}
+		return ver;
 	}
 }
